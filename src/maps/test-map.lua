@@ -14,4 +14,11 @@ local layer2 = {
 
 local objects = {}
 
+local collision_map = {
+    {0, 0, 0, 0};
+    {0, 0, 0, 0};
+    {0, 0, 0, 0};
+    {0, 0, 0, 0};
+}
+
 return layer1, layer2
