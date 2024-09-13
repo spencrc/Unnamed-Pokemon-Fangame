@@ -8,7 +8,7 @@ function Tile.new(x, y, CollisionValue)
     local instance = setmetatable({}, Tile)
 
     instance.PositionInTileset = Vector2.new(x or 0, y or 0)
-    instance.CollisionValue = CollisionValue or 0
+    instance.CollisionValue = CollisionValue
 
     return instance
 end
