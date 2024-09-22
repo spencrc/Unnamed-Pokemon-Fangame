@@ -4,11 +4,11 @@ local Vector2 = require("/modules/vector2")
 local Tile = {}
 Tile.__index = Tile
 
-function Tile.new(x, y, CollisionValue)
+function Tile.new(x, y, collisionType)
     local instance = setmetatable({}, Tile)
 
-    instance.PositionInTileset = Vector2.new(x or 0, y or 0)
-    instance.CollisionValue = CollisionValue
+    instance.Position = Vector2.new(x or 0, y or 0)
+    instance.CollisionType = collisionType
 
     return instance
 end

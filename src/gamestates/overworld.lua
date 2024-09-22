@@ -1,8 +1,10 @@
 --MODULES
 local Vector2 = require("/modules/vector2")
+local TileData = require("/modules/tile-data")
 local TM = require("/modules/tween-manager").new()
 --IMPORTANT SYSTEM VARIABLES
 local TILE_SIZE = 128
+local QUAD_SIZE = 32
 local screenWidth, screenHeight = love.graphics.getDimensions()
 --MAP DATA
 local map_layer1, map_layer2, objects = love.filesystem.load("maps/test-map.lua", "b")()
@@ -10,11 +12,9 @@ local mapWidth = #map_layer1
 local mapHeight = #map_layer1[1]
 local collisionData = love.filesystem.load("maps/collision-data.lua", "b")()
 --TILESETS & QUADS
-local Tileset_Layer1 
-local Tileset_Layer2
+local Tileset = love.graphics.newImage("images/collision-showcase.png")
 local PlayerTileset = love.graphics.newImage("images/temp-player.png")
-local Quads_Layer1 = {}
-local Quads_Layer2 = {}
+local Quads = {}
 --TO BE ORGANIZED
 local player = {
     Position = Vector2.new(1, 1);
@@ -25,41 +25,44 @@ local player = {
 --FUNCTIONS
 local Overworld = {}
 
-local function loadTileset()
-    Tileset_Layer1 = love.graphics.newImage("images/collision-showcase.png")
-    Tileset_Layer1:setFilter("nearest", "nearest")
-    Tileset_Layer2 = love.graphics.newImage("images/objects.png")
-    Tileset_Layer2:setFilter("nearest", "nearest")
+local function loadMap()
+    print('running')
 
-    local tilesetWidth, tilesetHeight = Tileset_Layer1:getDimensions()
+    Tileset:setFilter("nearest", "nearest")
 
-    for i = 1, tilesetWidth/64, 1 do
-        Quads_Layer1[i] = love.graphics.newQuad(
-            (i-1)*64, --starting x position
-            0, --starting y position
-            64, --tile width
-            64, --tile height
-            tilesetWidth, --tileset width
-            tilesetHeight --tileset height
-        )
-    end
+    local tilesetWidth, tilesetHeight = Tileset:getDimensions()
 
-    tilesetWidth, tilesetHeight = Tileset_Layer2:getDimensions()
+    for col = 1, mapHeight, 1 do
+        for row = 1, mapWidth, 1 do
+            local layer1TileAtPosition = TileData[map_layer1[col][row]]
+            local layer2TileAtPosition = TileData[map_layer2[col][row]]
 
-    for i = 1, tilesetWidth/32, 1 do
-        Quads_Layer2[i] = love.graphics.newQuad(
-            (i-1)*32, --starting x position
-            0, --starting y position
-            32, --tile width
-            32, --tile height
-            tilesetWidth, --tileset width
-            tilesetHeight --tileset height
-        )
+            if not Quads[map_layer1[col][row]] then
+                Quads[map_layer1[col][row]] = love.graphics.newQuad(
+                    layer1TileAtPosition.Position.X * 32,
+                    layer1TileAtPosition.Position.Y * 32,
+                    QUAD_SIZE,
+                    QUAD_SIZE,
+                    tilesetWidth,
+                    tilesetHeight
+                )
+            end
+            if not Quads[map_layer2[col][row]] then
+                Quads[map_layer2[col][row]] = love.graphics.newQuad(
+                    layer2TileAtPosition.Position.X * 32,
+                    layer2TileAtPosition.Position.Y * 32,
+                    QUAD_SIZE,
+                    QUAD_SIZE,
+                    tilesetWidth,
+                    tilesetHeight
+                )
+            end
+        end
     end
 end
 
 function Overworld.onStateBegin()
-    loadTileset()
+    loadMap()
     PlayerTileset:setFilter("nearest", "nearest")
 end
 
@@ -92,36 +95,28 @@ local function drawPlayerSprite()
         player.AbsolutePosition.X, --x position
         player.AbsolutePosition.Y, --y position
         2*math.pi,--angle in radians
-        TILE_SIZE/32, --x scale
-        TILE_SIZE/32 --y scale
+        TILE_SIZE/QUAD_SIZE, --x scale
+        TILE_SIZE/QUAD_SIZE --y scale
     )
 end
 
 local function drawLayer(layer)
     for col = 1, mapHeight, 1 do
         for row = 1, mapWidth, 1 do
-            local Tileset = Tileset_Layer1
             local TileId = layer[col][row]
-            local Quads
-            local multi = 64
 
-            if layer == map_layer1 then --temporary !!!!!!!! REMOVE THIS EVENTUALLY PLEASE
-                Quads = Quads_Layer1
-            else
-                Tileset = Tileset_Layer2
-                Quads = Quads_Layer2
-                multi = 32
-            end
+            print(TileId)
+            print(Quads[TileId])
 
-            if TileId > 0 then
+            if TileId ~= "-" then
                 love.graphics.draw(
                     Tileset, --tileset
                     Quads[TileId],  --quad
                     (row-1) * TILE_SIZE, --x position
                     (col-1) * TILE_SIZE, --y position
                     2*math.pi,
-                    TILE_SIZE/multi,
-                    TILE_SIZE/multi
+                    TILE_SIZE/QUAD_SIZE,
+                    TILE_SIZE/QUAD_SIZE
                 )
             end
         end
