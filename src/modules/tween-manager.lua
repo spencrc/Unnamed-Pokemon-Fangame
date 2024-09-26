@@ -44,7 +44,10 @@ function TweenManager:update(dt)
             local easing = self[t._easingStyle](t._duration / t._maxDuration)
 
             if not find(self._instancesUpdatedThisFrame, t._target) then
-                t.PlaybackState = "Playing"
+                if t.PlaybackState ~= "Playing" then
+                    t._start = t._target[t._propertyName]
+                    t.PlaybackState = "Playing"
+                end
                 table.insert(self._instancesUpdatedThisFrame, t._target)
 
                 if t._duration >= t._maxDuration then
