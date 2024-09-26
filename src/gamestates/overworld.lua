@@ -139,11 +139,22 @@ function Overworld.draw()
     drawPlayerSprite()
     --love.graphics.circle("fill", player.AbsolutePosition.X, player.AbsolutePosition.Y, TILE_SIZE/4)
     love.graphics.pop()
-    
+end
+
+function Overworld.update(dt)
+    if love.keyboard.isDown("left") then 
+        movePlayer("left")
+    elseif love.keyboard.isDown("right") then
+        movePlayer("right")
+    elseif love.keyboard.isDown("down") then
+        movePlayer("down")
+    elseif love.keyboard.isDown("up") then
+        movePlayer("up")
+    end
 end
 
 function Overworld.keypressed(key, scanCode, isRepeat)
-    movePlayer(key)
+    --movePlayer(key)
     if key == "escape" then 
         GSM:switch("mainmenu")
     end
