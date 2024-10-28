@@ -1,81 +1,64 @@
-local bit = require("bit") --library included in LuaJIT
---MODULES
 local PRNG = {}
 PRNG.__index = PRNG
 
-local function generateSeed()
-    return {
-        math.floor(math.random() * 0x10000),
-        math.floor(math.random() * 0x10000),
-        math.floor(math.random() * 0x10000),
-        math.floor(math.random() * 0x10000)
-    }
-end
+function PRNG.new(seed) --IMPLEMENTATION OF MULTIPLY-WITH-CARRY FROM THIS GITHUB: https://github.com/linux-man/randomlua/blob/master/randomlua.lua
+    local instances = setmetatable({}, PRNG) --did u think i know enough about cryptology or reading the wikipedia page to do this myself ???
 
-function PRNG.new(seed)
-    local instances = setmetatable({}, PRNG)
+    instances.a = 1103515245
+    instances.c = 12345
+    instances.m = 0x10000
+    instances.ic = instances.c
+    instances.x = nil
 
-    instances.seed = seed or generateSeed()
-    instances._initialSeed = {}
-
-    for i, e in pairs(instances.seed) do
-        instances._initialSeed[i] = e
-    end
+    instances:randomseed(seed)
 
     return instances
 end
 
-function PRNG:startingSeed()
-    return self._initialSeed
-end
-
-function PRNG:clone()
-    return self.new(self.seed)
-end
-
-function PRNG:next(from, to)
-    self.seed = self:nextFrame(self.seed)
-    local result = (bit.lshift(self.seed[1], 16) + self.seed[2]) % 2^32
-    if from then from = math.floor(from) end
-    if to then to = math.floor(to) end
-    if from == nil then 
-        result = result / 0x100000000
-    elseif (!to) then
-        result = math.floor(result * from / 0x100000000)
-    else
-        result = math.floor(result * (to - from) / 0x100000000) + from
+function PRNG:randomseed(seed)
+    if not seed then 
+        seed = os.time() % 2 ^ 31
     end
-    return result
+    self.c = self.ic
+    self.x = seed % 2 ^ 31
 end
 
-function PRNG:multiplyAdd(a, b, c)
-    local out = {0, 0, 0, 0}
-    local carry = 0
+function PRNG:random(a, b)
+    local t = self.a * self.x + self.c
+    local y = t % self.m
 
-    for outIdx = 4, 1, -1 do
-        for bIdx = outIdx, 4, 1 do
-            local aIdx = 4 - (bIdx - outIdx)
-            carry = carry + a[aIdx] * b[bIdx]
-        end
-        carry = carry + c[outIdx]
+    self.x = y
+    self.c = math.floor(t / self.m)
 
-        out[outIdx] = bit.band(carry, 0xFFFF)
-        carry = carry % 2^16 --% 2^16 is equivalent to JS' >>> 16
-    end
-
-    return out
+    if not a then return y / 0x10000
+    elseif not b then
+        if a == 0 then return y
+        else return 1 + (y % a) end
+    else return a + y % (b - a + 1) end
 end
 
-function PRNG:nextFrame(seed, framesToAdvance)
-    local b = {0x5D58, 0x8B65, 0x6C07, 0x8965}
-    local c = {0, 0, 0x26, 0x9EC3}
-    local n = framesToAdvance or 0
+function PRNG:rolledAtMostNumber(n, a, b)
+    local roll = self:random(a, b)
+    if n <= roll then return true end
+    return false
+end
 
-    for i = 1, n, 1 do
-        seed = self:multiplyAdd(seed, b, c)
-    end
+function PRNG:rolledExactNumber(n, a, b)
+    local roll = self:random(a, b)
+    if n == roll then return true end
+    return false
+end
 
-    return seed
+function PRNG:rolledAtLeastNumber(n, a, b)
+    local roll = self:random(a, b)
+    if n >= roll then return true end
+    return false
+end
+
+function PRNG:coinFlip()
+    local roll = self:random(1, 2)
+    if roll == 1 then return true end
+    return false
 end
 
 return PRNG
