@@ -53,6 +53,7 @@ function TweenManager:update(dt)
                 if t._duration >= t._maxDuration then
                     t._target[t._propertyName] = t._endGoal
                     t.PlaybackState = "Completed"
+                    t.Completed:Invoke()
                     table.remove(self._active, i)
                 else
                     t._target[t._propertyName] = math.floor(t._start + difference * easing)

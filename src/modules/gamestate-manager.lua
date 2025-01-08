@@ -37,9 +37,16 @@ function GamestateManager:draw()
 end
 
 function GamestateManager:keypressed(key, scanCode, isRepeat)
-    assert(self.currentState, "there must be a valid gamestate before attempting to draw!")
+    assert(self.currentState, "there must be a valid gamestate before attempting to detect key presses!")
     if self.currentState.keypressed then
         self.currentState.keypressed(key, scanCode, isRepeat)
+    end
+end
+
+function GamestateManager:keyreleased(key, scanCode)
+    assert(self.currentState, "there must be a valid gamestate before attempting to detect key releases!")
+    if self.currentState.keyreleased then
+        self.currentState.keyreleased(key, scanCode)
     end
 end
 

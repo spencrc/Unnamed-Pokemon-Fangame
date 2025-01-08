@@ -1,3 +1,6 @@
+--MODULES
+local Event = require("/modules/event")
+--
 local Tween = {}
 Tween.__index = Tween
 
@@ -10,6 +13,7 @@ function Tween.new(manager, target, duration, propertyName, endGoal, easingStyle
     assert(type(endGoal) == "number", "endGoal parameter must be a number!")
     --PUBLIC
     instance.PlaybackState = "Begin"
+    instance.Completed = Event.new()
     --PRIVATE
     instance._manager = manager
     instance._target = target

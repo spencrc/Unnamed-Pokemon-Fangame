@@ -21,5 +21,9 @@ function love.keypressed(key, scanCode, isRepeat)
     GSM:keypressed(key, scanCode, isRepeat)
 end
 
+function love.keyreleased(key, scanCode)
+    GSM:keyreleased(key, scanCode)
+end
+
 love.window.setTitle("aaaaaaaaaaaaaaaaaaaaaaaaaa")
-love.window.setFullscreen(true)
+--love.window.setFullscreen(true)

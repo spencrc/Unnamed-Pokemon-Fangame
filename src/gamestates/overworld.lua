@@ -19,7 +19,9 @@ local Quads = {}
 local player = {
     Position = Vector2.new(1, 1);
     AbsolutePosition = Vector2.new(0, 0);
+    MoveDir = nil;
     Direction = "down";
+    IsMoving = false;
 }
 
 --FUNCTIONS
@@ -142,60 +144,74 @@ function Overworld.draw()
 end
 
 function Overworld.update(dt)
-    if love.keyboard.isDown("left") then 
-        movePlayer("left")
-    elseif love.keyboard.isDown("right") then
-        movePlayer("right")
-    elseif love.keyboard.isDown("down") then
-        movePlayer("down")
-    elseif love.keyboard.isDown("up") then
-        movePlayer("up")
-    end
+    -- if love.keyboard.isDown("left") then 
+    --     MovePlayer("left")
+    -- elseif love.keyboard.isDown("right") then
+    --     MovePlayer("right")
+    -- elseif love.keyboard.isDown("down") then
+    --     MovePlayer("down")
+    -- elseif love.keyboard.isDown("up") then
+    --     MovePlayer("up")
+    -- end
 end
 
 function Overworld.keypressed(key, scanCode, isRepeat)
-    --movePlayer(key)
-    if key == "escape" then 
+    if key == "left" or key == "right" or key == "down" or key == "up" then
+        MovePlayer(key)
+    elseif key == "escape" then 
         GSM:switch("mainmenu")
     end
 end
 
-function movePlayer(direction)
-    if not DetermineCollision(direction) then
-        local movementTween
+function Overworld.keyreleased(key, scancode)
+    if key == "left" or key == "right" or key == "down" or key == "up" then
+        if player.MoveDir == key then player.MoveDir = nil end
+    end
+end
+
+function MovePlayer(direction)
+    if player.IsMoving then
+        player.MoveDir = direction
+        return
+    elseif not DetermineCollision(direction) then
+        local movementTween = nil
 
         if direction == "left" then
             player.Position.X = player.Position.X - 1
-            --movementTween = TM:Create(player.Position, 12, "X", player.Position.X - 1)
         elseif direction == "right" then
             player.Position.X = player.Position.X + 1
-            --movementTween = TM:Create(player.Position, 12, "X", player.Position.X + 1)
         elseif direction == "down" then
             player.Position.Y = player.Position.Y + 1
-            --movementTween = TM:Create(player.Position, 12, "Y", player.Position.Y + 1)
         elseif direction == "up" then
             player.Position.Y = player.Position.Y - 1
-            --movementTween = TM:Create(player.Position, 12, "Y", player.Position.Y - 1)
         else return
         end
-        if direction == "left" or direction == "right" then
-            movementTween = TM:Create(player.AbsolutePosition, 10, "X", (player.Position.X - 1) * TILE_SIZE)
-        else
-            movementTween = TM:Create(player.AbsolutePosition, 10, "Y", (player.Position.Y - 1) * TILE_SIZE)
-        end
-        movementTween:Play()
-    else 
-        player.Direction = direction
-        return
-    end
 
-    player.Direction = direction
+        if direction == "left" or direction == "right" then
+            movementTween = TM:Create(player.AbsolutePosition, 12, "X", (player.Position.X - 1) * TILE_SIZE)
+        else
+            movementTween = TM:Create(player.AbsolutePosition, 12, "Y", (player.Position.Y - 1) * TILE_SIZE)
+        end
+
+        player.MoveDir = direction
+        player.IsMoving = true
+        movementTween:Play()
+
+        movementTween.Completed:Connect(function()
+            player.IsMoving = false
+            if player.IsMoving ~= nil then
+                MovePlayer(player.MoveDir)
+            end
+            movementTween = nil
+        end)
+    end
+    player.Direction = player.MoveDir or direction
     -- local newX = (player.Position.X - 0.5) * TILE_SIZE
     -- local newY = (player.Position.Y - 0.5) * TILE_SIZE
     -- local movementTween = Tween.new(15, player.AbsolutePosition, {newX, newY}, "linear")
     -- movementTween:update()
 
-    print(player.Position)
+    --print(player.Position)
 end
 
 function DetermineCollision(direction)
