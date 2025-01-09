@@ -1,5 +1,5 @@
 --MODULES
-local Vector2 = require("/modules/vector2")
+local Vector2 = require("/lib/vector2")
 --
 local Tile = {}
 Tile.__index = Tile

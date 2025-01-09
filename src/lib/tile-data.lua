@@ -1,5 +1,5 @@
 --MODULES
-local Tile = require("/modules/tile")
+local Tile = require("/lib/tile")
 --
 local Tiles = {
     ["-"] = Tile.new(0, 0); --EMPTY TILE NOT MEANT TO BE DRAWN
