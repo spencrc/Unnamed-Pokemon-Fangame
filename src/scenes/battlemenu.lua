@@ -5,24 +5,24 @@ local Attack = Button.new(128, 128, 128, 64, "clicky")
 local yourHealth = 100
 local theirHealth = 100
 --
-local Versus = {}
+local BattleMenu = {}
 
-function Versus.draw()
+function BattleMenu.draw()
     Attack:draw()
 end
 
-function Versus.update(dt)
+function BattleMenu.update(dt)
     Attack:update(dt)
 end
 
-function Versus.onSceneBegin()
+function BattleMenu.onSceneBegin()
     Attack.Clicked:Connect(function() 
 
     end)
 end
 
-function Versus.onSceneEnd()
+function BattleMenu.onSceneEnd()
     Attack.Clicked:Disconnect()
 end
 
-return Versus
+return BattleMenu
