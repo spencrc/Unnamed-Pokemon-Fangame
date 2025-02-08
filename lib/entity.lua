@@ -59,12 +59,10 @@ function Entity:drawSprite()
     else error(self.Direction.." is not a valid direction!")
     end --IS BASED ON THE IDEA THAT ALL ENTITY SPRITES HAVE 4 DIRECTIONS
 
-    if self.IsMoving == false then --if player is moving, we reset
-        self._moveAnimationFramesElapsed = 0 --resets time elapsed for next time entity moves
-    else
+    if self.IsMoving == true or self._moveAnimationCycle > 1 then
         self._moveAnimationFramesElapsed = self._moveAnimationFramesElapsed + 1 --increments each frame
         if self._moveAnimationFramesElapsed >= 6 then --IS BASED ON THE IDEA THAT ENTITY SPRITES HAVE 4 FRAMES IN ANIMATION
-            if (self._moveAnimationCycle + 1) > 4 then --checks if next cycle would be out of bounds if simply incrementing
+            if (self._moveAnimationCycle + 1) > 4 or self.IsMoving == false then --checks if next cycle would be out of bounds if simply incrementing
                 self._moveAnimationCycle = 1 --wraps around animation cycle
             else
                 self._moveAnimationCycle = self._moveAnimationCycle + 1 --increments animation cycle

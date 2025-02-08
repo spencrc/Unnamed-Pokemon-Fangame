@@ -1,10 +1,11 @@
 --MODULES
-local Vector2 = require("/lib/vector2")
+local Constants = require("/lib/constants")
+local Entity = require("/lib/entity")
 local TileData = require("/lib/tile-data")
 local TM = require("/lib/tween-manager").new()
 --IMPORTANT SYSTEM VARIABLES
-local TILE_SIZE = 128
-local QUAD_SIZE = 32
+local TILE_SIZE = Constants.TILE_SIZE
+local QUAD_SIZE = Constants.QUAD_SIZE
 local screenWidth, screenHeight = love.graphics.getDimensions()
 --MAP DATA
 local map_layer1, map_layer2, objects = love.filesystem.load("maps/test-map.lua", "b")()
@@ -13,16 +14,10 @@ local mapHeight = #map_layer1[1]
 local collisionData = love.filesystem.load("maps/collision-data.lua", "b")()
 --TILESETS & QUADS
 local Tileset = love.graphics.newImage("assets/images/collision-showcase.png")
-local PlayerTileset = love.graphics.newImage("assets/images/temp-player.png")
+local PlayerTileset = love.graphics.newImage("assets/images/temp-Player.png")
 local Quads = {}
 --TO BE ORGANIZED
-local player = {
-    Position = Vector2.new(1, 1);
-    AbsolutePosition = Vector2.new(0, 0);
-    MoveDir = nil;
-    Direction = "down";
-    IsMoving = false;
-}
+local Player = Entity.new(PlayerTileset, 32)
 
 --FUNCTIONS
 local Overworld = {}
@@ -65,40 +60,6 @@ function Overworld.onSceneBegin()
     loadMap()
 end
 
-local function drawPlayerSprite()
-    local spriteCol = 0
-
-    if player.Direction == "down" then
-        spriteCol = 1
-    elseif player.Direction == "left" then
-        spriteCol = 2
-    elseif player.Direction == "right" then
-        spriteCol = 3
-    elseif player.Direction == "up" then
-        spriteCol = 4
-    else error(player.Direction.." is not a valid direction!")
-    end
-
-    local playerSprite = love.graphics.newQuad(
-        0,
-        (spriteCol-1)*32,
-        32,
-        32,
-        PlayerTileset:getWidth(),
-        PlayerTileset:getHeight()
-    )
-
-    love.graphics.draw(
-        PlayerTileset, --tileset
-        playerSprite, --selects quad to use
-        player.AbsolutePosition.X, --x position
-        player.AbsolutePosition.Y, --y position
-        2*math.pi,--angle in radians
-        TILE_SIZE/QUAD_SIZE, --x scale
-        TILE_SIZE/QUAD_SIZE --y scale
-    )
-end
-
 local function drawLayer(layer)
     for col = 1, mapHeight, 1 do
         for row = 1, mapWidth, 1 do
@@ -122,21 +83,21 @@ local function drawLayer(layer)
     end
 end
 
-function Overworld.draw()
+function Overworld.draw(dt)
     TM:update()
-    --player.AbsolutePosition.X = (player.Position.X - 1) * TILE_SIZE
-    --player.AbsolutePosition.Y = (player.Position.Y - 1) * TILE_SIZE
+    --Player.AbsolutePosition.X = (Player.Position.X - 1) * TILE_SIZE
+    --Player.AbsolutePosition.Y = (Player.Position.Y - 1) * TILE_SIZE
 
-    local tx = math.floor(player.AbsolutePosition.X - screenWidth/2)
-    local ty = math.floor(player.AbsolutePosition.Y - screenHeight/2)
+    local tx = math.floor(Player.AbsolutePosition.X - screenWidth/2)
+    local ty = math.floor(Player.AbsolutePosition.Y - screenHeight/2)
 
     love.graphics.push()
     love.graphics.translate(-tx, -ty)
 
     drawLayer(map_layer1)
     drawLayer(map_layer2)
-    drawPlayerSprite()
-    --love.graphics.circle("fill", player.AbsolutePosition.X, player.AbsolutePosition.Y, TILE_SIZE/4)
+    Player:draw()
+    --love.graphics.circle("fill", Player.AbsolutePosition.X, Player.AbsolutePosition.Y, TILE_SIZE/4)
     love.graphics.pop()
 end
 
@@ -162,53 +123,51 @@ end
 
 function Overworld.keyreleased(key, scancode)
     if key == "left" or key == "right" or key == "down" or key == "up" then
-        if player.MoveDir == key then player.MoveDir = nil end
+        if Player.MoveDir == key then Player.MoveDir = nil end
     end
 end
 
 function MovePlayer(direction)
-    if player.IsMoving then
-        player.MoveDir = direction
+    if Player.IsMoving then
+        Player.MoveDir = direction
         return
     elseif not DetermineCollision(direction) then
         local movementTween = nil
 
         if direction == "left" then
-            player.Position.X = player.Position.X - 1
+            Player.Position.X = Player.Position.X - 1
         elseif direction == "right" then
-            player.Position.X = player.Position.X + 1
+            Player.Position.X = Player.Position.X + 1
         elseif direction == "down" then
-            player.Position.Y = player.Position.Y + 1
+            Player.Position.Y = Player.Position.Y + 1
         elseif direction == "up" then
-            player.Position.Y = player.Position.Y - 1
+            Player.Position.Y = Player.Position.Y - 1
         else return
         end
 
         if direction == "left" or direction == "right" then
-            movementTween = TM:Create(player.AbsolutePosition, 12, "X", (player.Position.X - 1) * TILE_SIZE)
+            movementTween = TM:Create(Player.AbsolutePosition, 12, "X", (Player.Position.X - 1) * TILE_SIZE)
         else
-            movementTween = TM:Create(player.AbsolutePosition, 12, "Y", (player.Position.Y - 1) * TILE_SIZE)
+            movementTween = TM:Create(Player.AbsolutePosition, 12, "Y", (Player.Position.Y - 1) * TILE_SIZE)
         end
 
-        player.MoveDir = direction
-        player.IsMoving = true
+        Player.MoveDir = direction
+        Player.IsMoving = true
         movementTween:Play()
 
         movementTween.Completed:Connect(function()
-            player.IsMoving = false
-            if player.IsMoving ~= nil then
-                MovePlayer(player.MoveDir)
-            end
+            Player.IsMoving = false
+            MovePlayer(Player.MoveDir)
             movementTween = nil
         end)
     end
-    player.Direction = player.MoveDir or direction
-    -- local newX = (player.Position.X - 0.5) * TILE_SIZE
-    -- local newY = (player.Position.Y - 0.5) * TILE_SIZE
-    -- local movementTween = Tween.new(15, player.AbsolutePosition, {newX, newY}, "linear")
+    Player.Direction = Player.MoveDir or direction
+    -- local newX = (Player.Position.X - 0.5) * TILE_SIZE
+    -- local newY = (Player.Position.Y - 0.5) * TILE_SIZE
+    -- local movementTween = Tween.new(15, Player.AbsolutePosition, {newX, newY}, "linear")
     -- movementTween:update()
 
-    --print(player.Position)
+    --print(Player.Position)
 end
 
 function DetermineCollision(direction)
@@ -216,25 +175,25 @@ function DetermineCollision(direction)
     local tileIds = {}
 
     if direction == "left" then
-        if player.Position.X - 1 <= 0 then return true end
+        if Player.Position.X - 1 <= 0 then return true end
         associatedDirections = {"left","topleft","bottomleft", "leftright"}
-        table.insert(tileIds, map_layer1[player.Position.Y][player.Position.X - 1])
-        table.insert(tileIds, map_layer2[player.Position.Y][player.Position.X - 1])
+        table.insert(tileIds, map_layer1[Player.Position.Y][Player.Position.X - 1])
+        table.insert(tileIds, map_layer2[Player.Position.Y][Player.Position.X - 1])
     elseif direction == "right" then
-        if player.Position.X + 1 > mapWidth then return true end
+        if Player.Position.X + 1 > mapWidth then return true end
         associatedDirections = {"right","topright","bottomright", "leftright"}
-        table.insert(tileIds, map_layer1[player.Position.Y][player.Position.X + 1])
-        table.insert(tileIds, map_layer2[player.Position.Y][player.Position.X + 1])
+        table.insert(tileIds, map_layer1[Player.Position.Y][Player.Position.X + 1])
+        table.insert(tileIds, map_layer2[Player.Position.Y][Player.Position.X + 1])
     elseif direction == "down" then
-        if player.Position.Y + 1 > mapHeight then return true end
+        if Player.Position.Y + 1 > mapHeight then return true end
         associatedDirections = {"bottom","bottomleft","bottomright", "topbottom"}
-        table.insert(tileIds, map_layer1[player.Position.Y + 1][player.Position.X])
-        table.insert(tileIds, map_layer2[player.Position.Y + 1][player.Position.X])
+        table.insert(tileIds, map_layer1[Player.Position.Y + 1][Player.Position.X])
+        table.insert(tileIds, map_layer2[Player.Position.Y + 1][Player.Position.X])
     elseif direction == "up" then
-        if player.Position.Y - 1 <= 0 then return true end
+        if Player.Position.Y - 1 <= 0 then return true end
         associatedDirections = {"top","topleft","topright", "topbottom"}
-        table.insert(tileIds, map_layer1[player.Position.Y - 1][player.Position.X])
-        table.insert(tileIds, map_layer2[player.Position.Y - 1][player.Position.X])
+        table.insert(tileIds, map_layer1[Player.Position.Y - 1][Player.Position.X])
+        table.insert(tileIds, map_layer2[Player.Position.Y - 1][Player.Position.X])
     else
         return false
     end
