@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "sanjulaganepola.github-local-actions",
+        "tomblind.local-lua-debugger-vscode",
+        "pixelwar.love2dsnippets",
+        "pixelbyte-studios.pixelbyte-love2d",
+        "sumneko.lua",
+        "ionutvmi.path-autocomplete"
+    ]
+}

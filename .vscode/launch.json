@@ -1,0 +1,28 @@
+{ //taken from https://github.com/Oval-Tutu/bootstrap-love2d-project/blob/main/.vscode/launch.json
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "lua-local",
+        "request": "launch",
+        "name": "Debug",
+        "program": {
+          "command": "love"
+        },
+        "args": [
+          ".",
+          "debug"
+        ],
+      },
+      {
+        "type": "lua-local",
+        "request": "launch",
+        "name": "Release",
+        "program": {
+          "command": "love"
+        },
+        "args": [
+          ".",
+        ],
+      },
+    ]
+  }
